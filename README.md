@@ -4,8 +4,7 @@ A lightweight, async Redis-like in-memory key-value store built with Python's as
 
 ## Features
 
-- **Asyncio-based server** - Handle multiple clients concurrently without blocking
-- **String operations** - GET, SET, DEL, EXISTS commands
+- **Asyncio-based server** - Uses a single-threaded event loop with non-blocking I/O to handle many concurrent client connections without locks, avoiding race conditions and thread-per-connection overhead while keeping command execution atomic
 - **TTL support** - Set expiration times on keys with EXPIRE and TTL commands
 - **Lazy expiration** - Efficient memory management with automatic cleanup
 
@@ -45,62 +44,28 @@ The server is now listening for connections on port 9876.
 
 Open a new terminal and connect using `telnet`:
 
-**Using telnet:**
-
 ```bash
 telnet 127.0.0.1 9876
 ```
 
+Or using `nc` (netcat):
+
+```bash
+nc 127.0.0.1 9876
+```
+
 ### Available Commands
 
-Once connected, you can use the following commands:
+This database implements a subset of Redis commands with basic functionality (no options/flags):
 
-#### SET - Store a key-value pair
+- **SET key value** - Store a key-value pair
+- **GET key** - Retrieve a value by key
+- **DEL key** - Delete a key
+- **EXISTS key** - Check if a key exists
+- **EXPIRE key seconds** - Set expiration time on a key
+- **TTL key** - Get remaining time to live for a key
 
-```
-SET key value
-```
-
-Response: `OK`
-
-#### GET - Retrieve a value by key
-
-```
-GET key
-```
-
-Response: `value` (or `(nil)` if key doesn't exist)
-
-#### DEL - Delete a key
-
-```
-DEL key
-```
-
-Response: `1` (if deleted) or `0` (if key didn't exist)
-
-#### EXPIRE - Set expiration time on a key (in seconds)
-
-```
-SET key value
-EXPIRE key 10
-```
-
-Response: `1` (expiration set) or `0` (key doesn't exist)
-
-After 10 seconds, the key will automatically expire.
-
-#### TTL - Get remaining time to live for a key (in seconds)
-
-```
-TTL key
-```
-
-Response:
-
-- Remaining seconds (e.g., `8`)
-- `-1` if key exists but has no expiration
-- `-2` if key doesn't exist
+> **Note:** Commands follow Redis syntax but do not support additional options or flags. For example, `SET` does not support `EX`, `NX`, `XX` options.
 
 ### Example Session
 
