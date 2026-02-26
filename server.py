@@ -2,6 +2,7 @@ import asyncio
 
 from command_processor import CommandProcessor
 from data_store import DataStore
+from persistence import AOFHandler
 
 
 class Server:
@@ -10,6 +11,15 @@ class Server:
         self.port = port
         self.store = DataStore()
         self.processor = CommandProcessor(self.store)
+        self.aof_handler = AOFHandler()
+
+    def _init_aof(self):
+        count = self.aof_handler.replay(self.processor)
+        if count > 0:
+            print(f"AOF: Replayed {count} commands")
+
+        self.aof_handler.open()
+        self.processor.set_aof_handler(self.aof_handler)
 
     async def handle_client(self, reader, writer):
         addr = writer.get_extra_info("peername")
@@ -32,14 +42,19 @@ class Server:
             await writer.wait_closed()
 
     async def start(self):
+        self._init_aof()
+
         server = await asyncio.start_server(
             self.handle_client, host=self.host, port=self.port
         )
 
         print(f"Async KV server running on {self.host}:{self.port}")
 
-        async with server:
-            await server.serve_forever()
+        try:
+            async with server:
+                await server.serve_forever()
+        finally:
+            self.aof_handler.close()
 
 
 async def main():

@@ -50,6 +50,16 @@ class DataStore:
 
         return True
 
+    def expire_at(self, key, timestamp):
+        value = self.get(key)
+        if value is None:
+            return False
+
+        entry = self._store[key]
+        entry.expires_at = timestamp
+
+        return True
+
     def get_ttl(self, key) -> int:
         value = self.get(key)
         if value is None:

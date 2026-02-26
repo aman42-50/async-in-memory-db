@@ -3,6 +3,8 @@ from typing import Dict
 
 
 class Command(ABC):
+    is_write: bool = False
+
     @abstractmethod
     def execute(self, args, store) -> str:
         pass
@@ -38,6 +40,8 @@ class GetCommand(Command):
 
 
 class SetCommand(Command):
+    is_write = True
+
     def validate_args(self, args) -> bool:
         return len(args) == 2  # SET key value
 
@@ -48,6 +52,8 @@ class SetCommand(Command):
 
 
 class DelCommand(Command):
+    is_write = True
+
     def validate_args(self, args) -> bool:
         return len(args) == 1  # DEL key
 
@@ -58,12 +64,32 @@ class DelCommand(Command):
 
 
 class ExpireCommand(Command):
+    is_write = True
+
     def validate_args(self, args) -> bool:
         return len(args) == 2 and args[1].isdigit()  # EXPIRE key seconds
 
     def execute(self, args, store) -> str:
         key, seconds = args
         success = store.expire(key, int(seconds))
+        return "1" if success else "0"
+
+
+class ExpireAtCommand(Command):
+    is_write = True
+
+    def validate_args(self, args) -> bool:
+        if len(args) != 2:
+            return False
+        try:
+            float(args[1])
+            return True
+        except ValueError:
+            return False
+
+    def execute(self, args, store) -> str:
+        key, timestamp = args
+        success = store.expire_at(key, float(timestamp))
         return "1" if success else "0"
 
 
@@ -82,4 +108,5 @@ registry.register("GET", GetCommand())
 registry.register("SET", SetCommand())
 registry.register("DEL", DelCommand())
 registry.register("EXPIRE", ExpireCommand())
+registry.register("EXPIREAT", ExpireAtCommand())
 registry.register("TTL", TTLCommand())

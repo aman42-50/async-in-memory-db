@@ -7,6 +7,7 @@ A lightweight, async Redis-like in-memory key-value store built with Python's as
 - **Asyncio-based server** - Uses a single-threaded event loop with non-blocking I/O to handle many concurrent client connections without locks, avoiding race conditions and thread-per-connection overhead while keeping command execution atomic
 - **TTL support** - Set expiration times on keys with EXPIRE and TTL commands
 - **Lazy expiration** - Efficient memory management with automatic cleanup
+- **AOF persistence** - Every write command is logged to an append-only file and replayed on startup, so data survives restarts
 
 ## Requirements
 
@@ -61,8 +62,8 @@ This database implements a subset of Redis commands with basic functionality (no
 - **SET key value** - Store a key-value pair
 - **GET key** - Retrieve a value by key
 - **DEL key** - Delete a key
-- **EXISTS key** - Check if a key exists
 - **EXPIRE key seconds** - Set expiration time on a key
+- **EXPIREAT key timestamp** - Set expiration to an absolute Unix timestamp
 - **TTL key** - Get remaining time to live for a key
 
 > **Note:** Commands follow Redis syntax but do not support additional options or flags. For example, `SET` does not support `EX`, `NX`, `XX` options.
